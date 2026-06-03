@@ -22,6 +22,19 @@ CREATE TABLE IF NOT EXISTS matches (
     name VARCHAR(100) NOT NULL,
     date DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('active', 'finished') DEFAULT 'active',
+    join_code VARCHAR(12) UNIQUE,
+    is_open TINYINT(1) DEFAULT 1,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Match Participants (social feature: multiple users per match)
+CREATE TABLE IF NOT EXISTS match_participants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    match_id INT NOT NULL,
+    user_id INT NOT NULL,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_participation (match_id, user_id),
+    FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
