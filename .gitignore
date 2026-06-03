@@ -1,0 +1,23 @@
+# Dependencias de Node (Si llegas a usar NPM en la raíz)
+node_modules/
+
+# Archivos de entorno y secretos
+.env
+.env.local
+*.pem
+
+# Archivos de la base de datos (por si exportas pruebas locales)
+*.sql
+!db/schema.sql
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Docker
+.docker/

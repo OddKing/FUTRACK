@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FUTRACK</title>
+    
+    <!-- External Dependencies -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="icon" type="image/png" href="../assets/icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- External Scripts -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <!-- Auth Overlay -->
+    <div id="loginOverlay">
+        <img src="../assets/logo-web.png" style="max-width:180px; margin-bottom:30px;">
+        <div id="authContainer">
+            <!-- Google Login (Común para Login y Registro) -->
+            <div id="g_id_onload"
+                 data-client_id="82080578361-f73c7afmgpkf4t8aiak16f3vb9ba1jvj.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleGoogleResponse"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left" style="margin-bottom:20px; display:inline-block;"></div>
+
+            <div style="display:flex; align-items:center; margin:10px 0 25px 0; color:#475569;">
+                <hr style="flex:1; border:0; border-top:1px solid var(--glass-border);">
+                <span style="padding:0 10px; font-size:0.8rem;">o usa tu correo</span>
+                <hr style="flex:1; border:0; border-top:1px solid var(--glass-border);">
+            </div>
+
+            <div id="loginForm">
+                <h2>Bienvenido</h2>
+                <p style="color:#64748b; margin-bottom:20px; font-size:0.9rem;">Ingresa a tu cuenta de FUTRACK</p>
+                <input type="email" id="loginEmail" placeholder="Email">
+                <input type="password" id="loginPass" placeholder="Contraseña">
+                <button id="btnActionLogin">INICIAR SESIÓN</button>
+                <p style="color:#64748b; font-size:0.9rem; margin-top:20px;">¿No tienes cuenta? <a href="javascript:void(0)" onclick="toggleAuth('register')" style="color:var(--accent); text-decoration:none;">Regístrate</a></p>
+            </div>
+
+            <div id="registerForm" style="display:none;">
+                <h2>Crea tu cuenta</h2>
+                <p style="color:#64748b; margin-bottom:20px; font-size:0.9rem;">Analiza tus partidos como un profesional</p>
+                <input type="text" id="regName" placeholder="Tu Nombre">
+                <input type="email" id="regEmail" placeholder="Email">
+                <input type="password" id="regPass" placeholder="Contraseña">
+                <button id="btnActionRegister">CREAR MI CUENTA</button>
+                <p style="color:#64748b; font-size:0.9rem; margin-top:20px;">¿Ya tienes cuenta? <a href="javascript:void(0)" onclick="toggleAuth('login')" style="color:var(--accent); text-decoration:none;">Inicia Sesión</a></p>
+            </div>
+            <p id="authError" style="color:var(--accent-red); font-size:0.8rem; margin-top:15px; display:none;"></p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../assets/logo-web.png" alt="FUTRACK" style="max-width: 180px; margin-bottom: 40px; display: block;" onerror="this.style.display='none'">
+            </div>
+            <nav>
+                <div class="nav-label">PARTIDOS RECIENTES</div>
+                <ul id="matchList">
+                    <li class="loading">Cargando partidos...</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h1 id="matchTitle">Selecciona un partido</h1>
+                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                    <div class="stats-bar">
+                        <div class="stat-item">
+                            <span class="label">Puntos:</span>
+                            <span class="value" id="totalPoints">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Distancia:</span>
+                            <span class="value" id="totalDistance">0 m</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Vel. Max:</span>
+                            <span class="value" id="maxSpeed">0 km/h</span>
+                        </div>
+                    </div>
+                    
+                    <div id="userProfileHeader">
+                        <div id="userInitial">U</div>
+                        <div id="userNameEl">Usuario</div>
+                    </div>
+
+                    <button onclick="logout()" class="btn-logout-header" title="Cerrar Sesión">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
+                </div>
+            </header>
+
+            <section class="viewer-section">
+                <div class="card map-card">
+                    <div class="card-header">
+                        <h3>MAPA DE CALOR</h3>
+                        <div class="toggle-group">
+                            <button id="btnHeatmap" class="active">Heatmap</button>
+                            <button id="btnPath">Trayectoria</button>
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3>RITMO Y VELOCIDAD</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="speedChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Internal JS Modules -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Application Logic -->
+    <script src="js/auth.js"></script>
+    <script src="js/viewer.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

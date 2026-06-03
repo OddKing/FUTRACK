@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - DB_HOST=db
+      - DB_NAME=futbol7_tracker
+      - DB_USER=futrack_user
+      - DB_PASS=futrack_pass
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: super_secret_root_password
+      MYSQL_DATABASE: futbol7_tracker
+      MYSQL_USER: futrack_user
+      MYSQL_PASSWORD: futrack_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Autoejecuta el schema.sql al iniciar por primera vez
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+volumes:
+  db_data:

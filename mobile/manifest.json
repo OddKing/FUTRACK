@@ -1,0 +1,16 @@
+{
+  "name": "FUTRACK GPS",
+  "short_name": "FUTRACK",
+  "description": "Premium GPS Tracker for Football Analytics",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#39FF14",
+  "icons": [
+    {
+      "src": "../assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
