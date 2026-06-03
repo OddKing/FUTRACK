@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255),
     google_id VARCHAR(255) UNIQUE,
     api_token VARCHAR(255) UNIQUE,
+    subscription_tier ENUM('free', 'pro', 'elite') DEFAULT 'free',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
