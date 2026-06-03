@@ -4,14 +4,28 @@
  * Futbol 7 Tracker
  */
 
-header("Access-Control-Allow-Origin: *");
+// Restringir CORS a dominios conocidos
+$allowed_origins = [
+    'https://tracker.mueblesbarguay.cl',
+    'http://localhost',
+    'http://localhost:8081',
+    'exp://192.168.100.4:8081',
+];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    header("Access-Control-Allow-Origin: https://tracker.mueblesbarguay.cl");
+}
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE");
 header("Access-Control-Allow-Headers: Content-Type, X-API-KEY");
 header("Content-Type: application/json; charset=UTF-8");
 
 // Seguridad FUTRACK
-define('DASHBOARD_PASS', '123momiaes');
-define('API_KEY', 'fut7_secure_token_2026'); // Token para comunicación segura entre App y Servidor
+// La contraseña del dashboard se lee desde una variable de entorno (definida en docker-compose.yml)
+define('DASHBOARD_PASS', getenv('DASHBOARD_PASS') ?: 'cambiar_esta_clave_en_produccion');
+define('GOOGLE_CLIENT_ID', '82080578361-f73c7afmgpkf4t8aiak16f3vb9ba1jvj.apps.googleusercontent.com');
+define('MAX_TRACKING_POINTS', 10000); // Límite de puntos GPS por request (anti-DoS)
 
 function get_auth_key() {
     // 1. Intentar con getallheaders (Apache/Nginx/Modern PHP)

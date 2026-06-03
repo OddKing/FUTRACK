@@ -24,6 +24,13 @@ if ($action === 'register') {
         exit;
     }
 
+    // Validar formato de email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'El correo electrónico no es válido']);
+        exit;
+    }
+
     $hash = password_hash($password, PASSWORD_BCRYPT);
     $token = bin2hex(random_bytes(32));
 
@@ -42,7 +49,9 @@ if ($action === 'register') {
         if ($e->getCode() == 23000) {
             echo json_encode(['error' => 'El correo ya está registrado']);
         } else {
-            echo json_encode(['error' => 'Error al registrar: ' . $e->getMessage()]);
+            // No exponer detalles internos al cliente
+            error_log('FUTRACK register error: ' . $e->getMessage());
+            echo json_encode(['error' => 'Error al registrar. Inténtalo nuevamente.']);
         }
     }
     exit;
@@ -98,6 +107,15 @@ if ($action === 'google_login') {
     $payload = json_decode($response, true);
 
     if ($httpCode === 200 && isset($payload['email'])) {
+
+        // 🔴 Verificar que el token fue emitido para NUESTRA app (anti-token-hijacking)
+        $aud = $payload['aud'] ?? '';
+        if ($aud !== GOOGLE_CLIENT_ID) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token de Google no válido para esta aplicación']);
+            exit;
+        }
+
         $email = $payload['email'];
         $name = $payload['name'] ?? 'Usuario Google';
         $google_id = $payload['sub'];

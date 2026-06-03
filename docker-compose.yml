@@ -12,6 +12,7 @@ services:
       - DB_NAME=futbol7_tracker
       - DB_USER=futrack_user
       - DB_PASS=futrack_pass
+      - DASHBOARD_PASS=futrack_admin_2026
     depends_on:
       - db
     restart: unless-stopped

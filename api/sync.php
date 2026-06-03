@@ -33,6 +33,23 @@ $match_id = $data['match_id'];
 $player_id = $data['player_id'] ?? null;
 $points = $data['points'];
 
+// Anti-DoS: limitar cantidad de puntos por request
+if (count($points) > MAX_TRACKING_POINTS) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Demasiados puntos en un solo request (máximo ' . MAX_TRACKING_POINTS . ')']);
+    exit;
+}
+
+// Filtrar y validar coordenadas GPS (lat -90/90, lng -180/180)
+$points = array_filter($points, function($p) {
+    $lat = $p['lat'] ?? null;
+    $lng = $p['lng'] ?? null;
+    return is_numeric($lat) && is_numeric($lng)
+        && $lat >= -90 && $lat <= 90
+        && $lng >= -180 && $lng <= 180;
+});
+$points = array_values($points); // Re-indexar
+
 // Validar o asignar player_id
 if (!$player_id) {
     // Buscar primer jugador del usuario
