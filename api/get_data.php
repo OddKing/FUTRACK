@@ -46,6 +46,15 @@ if ($action == 'delete_match') {
     exit;
 }
 
+if ($action == 'create_match') {
+    $name = $_POST['name'] ?? 'Partido ' . date('d/m/Y H:i');
+    $stmt = $pdo->prepare("INSERT INTO matches (name, date, user_id) VALUES (?, NOW(), ?)");
+    $stmt->execute([$name, $user_id]);
+    $match_id = $pdo->lastInsertId();
+    echo json_encode(['status' => 'success', 'match_id' => (int)$match_id, 'name' => $name]);
+    exit;
+}
+
 if ($action == 'list_matches') {
     $stmt = $pdo->prepare("SELECT * FROM matches WHERE user_id = ? ORDER BY date DESC");
     $stmt->execute([$user_id]);
