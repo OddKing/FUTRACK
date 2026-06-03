@@ -9,6 +9,8 @@ node_modules/
 # Archivos de la base de datos (por si exportas pruebas locales)
 *.sql
 !db/schema.sql
+!db/migrate_social.sql
+!db/migrate_subscriptions.sql
 
 # Archivos del sistema operativo
 .DS_Store

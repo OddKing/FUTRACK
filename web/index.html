@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - FUTRACK</title>
+    <title>FuTracker — Dashboard</title>
+    <meta name="description" content="Analiza tu rendimiento deportivo, compara con tus amigos y lleva tus estadísticas al siguiente nivel con FuTracker.">
     
     <!-- External Dependencies -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="icon" type="image/png" href="../assets/icon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <!-- Custom Styles -->
     <link rel="stylesheet" href="css/styles.css">
@@ -21,7 +22,6 @@
     <div id="loginOverlay">
         <img src="../assets/logo-web.png" style="max-width:180px; margin-bottom:30px;">
         <div id="authContainer">
-            <!-- Google Login (Común para Login y Registro) -->
             <div id="g_id_onload"
                  data-client_id="82080578361-f73c7afmgpkf4t8aiak16f3vb9ba1jvj.apps.googleusercontent.com"
                  data-context="signin"
@@ -55,7 +55,7 @@
                 <button id="btnActionRegister">CREAR MI CUENTA</button>
                 <p style="color:#64748b; font-size:0.9rem; margin-top:20px;">¿Ya tienes cuenta? <a href="javascript:void(0)" onclick="toggleAuth('login')" style="color:var(--accent); text-decoration:none;">Inicia Sesión</a></p>
             </div>
-            <p id="authError" style="color:var(--accent-red); font-size:0.8rem; margin-top:15px; display:none;"></p>
+            <p id="authError" style="color:#ff5252; font-size:0.8rem; margin-top:15px; display:none;"></p>
         </div>
     </div>
 
@@ -63,21 +63,35 @@
     <div class="dashboard">
         <aside class="sidebar">
             <div class="logo">
-                <img src="../assets/logo-web.png" alt="FUTRACK" style="max-width: 180px; margin-bottom: 40px; display: block;" onerror="this.style.display='none'">
+                <img src="../assets/logo-web.png" alt="FUTRACK" style="max-width: 180px; margin-bottom: 20px; display: block;" onerror="this.style.display='none'">
             </div>
-            <nav>
-                <div class="nav-label">PARTIDOS RECIENTES</div>
+
+            <!-- Nav Tabs -->
+            <div class="sidebar-nav">
+                <button id="tabStats" class="tab-btn active" onclick="switchTab('stats')">📊 Mis Partidos</button>
+                <button id="tabPlans" class="tab-btn" onclick="switchTab('plans')">⭐ Planes y Precios</button>
+            </div>
+
+            <!-- Match list (visible in stats tab) -->
+            <div id="matchListSection">
+                <div class="nav-label" style="margin-top:1.5rem;">PARTIDOS RECIENTES</div>
                 <ul id="matchList">
                     <li class="loading">Cargando partidos...</li>
                 </ul>
-            </nav>
+            </div>
+
+            <!-- Subscription badge at bottom -->
+            <div id="tierDisplay" style="margin-top: auto; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); text-align:center;">
+                <div id="tierLabel" style="font-size:0.75rem; color:#64748b;">PLAN ACTUAL</div>
+                <div id="tierValue" style="font-weight:700; font-size:1.1rem; color:#ffb300; margin-top:4px;">FREE</div>
+            </div>
         </aside>
 
         <main class="content">
             <header>
                 <h1 id="matchTitle">Selecciona un partido</h1>
                 <div style="display: flex; align-items: center; gap: 1.5rem;">
-                    <div class="stats-bar">
+                    <div class="stats-bar" id="statsBar">
                         <div class="stat-item">
                             <span class="label">Puntos:</span>
                             <span class="value" id="totalPoints">0</span>
@@ -91,39 +105,105 @@
                             <span class="value" id="maxSpeed">0 km/h</span>
                         </div>
                     </div>
-                    
                     <div id="userProfileHeader">
                         <div id="userInitial">U</div>
                         <div id="userNameEl">Usuario</div>
                     </div>
-
                     <button onclick="logout()" class="btn-logout-header" title="Cerrar Sesión">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     </button>
                 </div>
             </header>
 
-            <section class="viewer-section">
-                <div class="card map-card">
-                    <div class="card-header">
-                        <h3>MAPA DE CALOR</h3>
-                        <div class="toggle-group">
-                            <button id="btnHeatmap" class="active">Heatmap</button>
-                            <button id="btnPath">Trayectoria</button>
+            <!-- STATS PANEL -->
+            <div id="panelStats">
+                <section class="viewer-section">
+                    <div class="card map-card">
+                        <div class="card-header">
+                            <h3>MAPA DE CALOR</h3>
+                            <div class="toggle-group">
+                                <button id="btnHeatmap" class="active">Heatmap</button>
+                                <button id="btnPath">Trayectoria</button>
+                            </div>
+                        </div>
+                        <div id="map"></div>
+                    </div>
+
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>RITMO Y VELOCIDAD</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="speedChart"></canvas>
                         </div>
                     </div>
-                    <div id="map"></div>
-                </div>
 
-                <div class="card chart-card">
-                    <div class="card-header">
-                        <h3>RITMO Y VELOCIDAD</h3>
+                    <!-- Comparison Podium -->
+                    <div class="card" id="podiumCard" style="display:none;">
+                        <div class="card-header">
+                            <h3>🏆 COMPARATIVA DEL PARTIDO</h3>
+                            <span id="podiumMatchName" style="font-size:0.8rem; color:#64748b;"></span>
+                        </div>
+                        <div id="podiumList"></div>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="speedChart"></canvas>
+                </section>
+            </div>
+
+            <!-- PLANS PANEL -->
+            <div id="panelPlans" style="display:none;">
+                <div class="plans-section">
+                    <h2 style="text-align:center; font-size:2rem; margin-bottom:0.5rem;">Elige tu plan</h2>
+                    <p style="text-align:center; color:#64748b; margin-bottom:3rem;">Lleva tu rendimiento al siguiente nivel con FuTracker.</p>
+                    
+                    <div class="plans-grid">
+                        <!-- FREE -->
+                        <div class="plan-card" id="planFree">
+                            <div class="plan-name">Free</div>
+                            <div class="plan-price">$0 <span>/mes</span></div>
+                            <ul class="plan-features">
+                                <li class="ok">1 partido por semana</li>
+                                <li class="ok">Mapa de calor y velocidad</li>
+                                <li class="ok">Estadísticas individuales</li>
+                                <li class="no">Unirse a partidos de amigos</li>
+                                <li class="no">Comparativa en tiempo real</li>
+                            </ul>
+                            <div class="plan-current-badge" id="badgeFree" style="display:none;">Plan Actual</div>
+                        </div>
+
+                        <!-- PRO -->
+                        <div class="plan-card plan-featured" id="planPro">
+                            <div class="plan-popular-tag">MÁS POPULAR</div>
+                            <div class="plan-name" style="color:var(--accent);">Pro</div>
+                            <div class="plan-price">$1.49 <span>/mes</span></div>
+                            <ul class="plan-features">
+                                <li class="ok">1 partido al día</li>
+                                <li class="ok">Crear partidos con código</li>
+                                <li class="ok">Unirse a partidos de amigos</li>
+                                <li class="ok">Podio de resultados</li>
+                                <li class="no">Partidos ilimitados</li>
+                            </ul>
+                            <button class="plan-btn plan-btn-pro" id="btnUpgradePro" onclick="upgradePlan('pro')">Suscribirse a PRO</button>
+                            <div class="plan-current-badge" id="badgePro" style="display:none;">Plan Actual</div>
+                        </div>
+
+                        <!-- ELITE -->
+                        <div class="plan-card" id="planElite">
+                            <div class="plan-name" style="color:#ffb300;">Elite</div>
+                            <div class="plan-price">$2.99 <span>/mes</span></div>
+                            <ul class="plan-features">
+                                <li class="ok">Partidos <strong>ilimitados</strong> al día</li>
+                                <li class="ok">Crear partidos con código</li>
+                                <li class="ok">Unirse a partidos sin límite</li>
+                                <li class="ok">Podio y comparativa completa</li>
+                                <li class="ok">Para jugadores intensivos</li>
+                            </ul>
+                            <button class="plan-btn plan-btn-elite" id="btnUpgradeElite" onclick="upgradePlan('elite')">Suscribirse a ELITE</button>
+                            <div class="plan-current-badge" id="badgeElite" style="display:none;">Plan Actual</div>
+                        </div>
                     </div>
+                    <p style="text-align:center; color:#334155; font-size:0.8rem; margin-top:2rem;">* Los pagos están actualmente en modo de prueba.</p>
                 </div>
-            </section>
+            </div>
         </main>
     </div>
 
